@@ -1,13 +1,13 @@
 import VaultDetailFeature from "@/components/vault/vault-detail-feature"
 
+// Properly define page props according to Next.js conventions
 interface VaultDetailPageProps {
   params: {
     address: string
-  }
+  },
+  searchParams?: { [key: string]: string | string[] | undefined }
 }
 
-export default async function VaultDetailPage({ params }: VaultDetailPageProps) {
-  // Ensure params is resolved before accessing properties
-  const resolvedParams = await Promise.resolve(params)
-  return <VaultDetailFeature vaultId={resolvedParams.address} />
+export default function VaultDetailPage({ params }: VaultDetailPageProps) {
+  return <VaultDetailFeature vaultId={params.address} />
 }
