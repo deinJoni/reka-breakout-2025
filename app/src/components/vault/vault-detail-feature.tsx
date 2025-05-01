@@ -1,14 +1,10 @@
 "use client"
 
-import { useRouter } from "next/navigation"
+import { useRouter, useParams } from "next/navigation"
 import { ArrowLeft, Loader2 } from "lucide-react"
 import { useVaultById } from "@/hooks/useSupabaseVaults"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-
-interface VaultDetailFeatureProps {
-    vaultId: string
-}
 
 // Type for vault data from Supabase
 interface VaultData {
@@ -37,8 +33,11 @@ interface VaultData {
     }
 }
 
-export default function VaultDetailFeature({ vaultId }: VaultDetailFeatureProps) {
+export default function VaultDetailFeature() {
     const router = useRouter()
+    const params = useParams()
+    const vaultId = params?.address as string
+    
     const { data: vault, isLoading, error } = useVaultById(vaultId)
 
     // Handle loading state
