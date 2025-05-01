@@ -9,21 +9,15 @@ import { useVaults } from '@/hooks/useSupabaseVaults'
 import { Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
-// Define a type for the vault data we expect
+// Type for vault metadata structure
+type VaultMetadata = Record<string, string | number>;
+
+// Type for vault data structure
 type VaultData = {
-  id: string;
-  data: {
-    sourceToken: string;
-    sourceAmount: number;
-    metadata: {
-      sourceSymbol: string;
-      targetName: string;
-      targetAmount: number;
-      targetSymbol: string;
-      percentage: number;
-      timeLeft: string;
-    }
-  }
+  sourceToken?: string;
+  sourceAmount?: number;
+  metadata?: VaultMetadata;
+  [key: string]: unknown;
 };
 
 export default function VaultFeature() {
@@ -61,21 +55,23 @@ export default function VaultFeature() {
                 </div>
             ) : vaults && vaults.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 justify-between">
-                    {vaults.map((vault: any) => {
-                        // Use optional chaining and provide fallbacks to handle any data structure
-                        const metadata = vault.data?.metadata || {};
+                    {vaults.map((vault) => {
+                        // Type assertion and safe access with optional chaining
+                        const data = vault.data as VaultData || {};
+                        const metadata = data.metadata as VaultMetadata || {};
+                        
                         return (
                             <VaultCard
                                 key={vault.id}
                                 id={vault.id}
-                                sourceToken={vault.data?.sourceToken || ""}
-                                sourceAmount={Number(vault.data?.sourceAmount) || 0}
-                                sourceSymbol={metadata.sourceSymbol || ""}
-                                targetName={metadata.targetName || ""}
+                                sourceToken={data.sourceToken || ""}
+                                sourceAmount={Number(data.sourceAmount) || 0}
+                                sourceSymbol={metadata.sourceSymbol as string || ""}
+                                targetName={metadata.targetName as string || ""}
                                 targetAmount={Number(metadata.targetAmount) || 0}
-                                targetSymbol={metadata.targetSymbol || ""}
+                                targetSymbol={metadata.targetSymbol as string || ""}
                                 percentage={Number(metadata.percentage) || 0}
-                                timeLeft={metadata.timeLeft || ""}
+                                timeLeft={metadata.timeLeft as string || ""}
                                 mode="view"
                                 onAction={() => router.push(`/vault/${vault.id}`)}
                             />
@@ -84,7 +80,7 @@ export default function VaultFeature() {
                 </div>
             ) : (
                 <div className="text-center py-12 border-2 border-dashed rounded-lg p-6">
-                    <p className="text-muted-foreground mb-4">You don't have any vaults yet.</p>
+                    <p className="text-muted-foreground mb-4">You don&apos;t have any vaults yet.</p>
                     <Button asChild>
                         <Link href="/vault/create">Create Your First Vault</Link>
                     </Button>

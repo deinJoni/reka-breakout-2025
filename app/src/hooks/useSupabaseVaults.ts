@@ -12,10 +12,14 @@ export function useVaults() {
     queryKey: key,
     enabled: !!account?.address.toString(),
     queryFn: async () => {
+      if (!account?.address) {
+        throw new Error('Wallet address is not available')
+      }
+      
       const { data, error } = await supabase
         .from('vaults')
         .select('*')
-        .eq('owner_pubkey', account?.address.toString()!)
+        .eq('owner_pubkey', account.address.toString())
         .order('created_at', { ascending: false })
       if (error) throw error
       return data
@@ -45,10 +49,14 @@ export function useCreateVault() {
 
   return useMutation({
     mutationFn: async (payload: { data: Json }) => {
+      if (!account?.address) {
+        throw new Error('Wallet address is not available')
+      }
+      
       const { data, error } = await supabase
         .from('vaults')
         .insert({
-          owner_pubkey: account?.address.toString()!,
+          owner_pubkey: account.address.toString(),
           ...payload,
         })
         .select()
@@ -57,7 +65,9 @@ export function useCreateVault() {
       return data
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['vaults', account?.address.toString()] })
+      if (account?.address) {
+        queryClient.invalidateQueries({ queryKey: ['vaults', account.address.toString()] })
+      }
     },
   })
 }

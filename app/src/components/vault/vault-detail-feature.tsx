@@ -5,8 +5,6 @@ import { ArrowLeft, Loader2 } from "lucide-react"
 import { useVaultById } from "@/hooks/useSupabaseVaults"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { VaultCard } from "@/components/vault/vault-card"
-import { Json } from "@/lib/supabase.types"
 
 interface VaultDetailFeatureProps {
     vaultId: string
@@ -75,7 +73,7 @@ export default function VaultDetailFeature({ vaultId }: VaultDetailFeatureProps)
                         </CardHeader>
                         <CardContent>
                             <p className="text-red-600">
-                                The requested vault could not be found or you don't have permission to view it.
+                                The requested vault could not be found or you don&apos;t have permission to view it.
                             </p>
                             <Button
                                 className="mt-4"

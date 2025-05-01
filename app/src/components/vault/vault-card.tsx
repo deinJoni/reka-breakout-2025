@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardFooter } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { ArrowRight, Clock, Eye, Plus, Save } from "lucide-react"
+import { ArrowRight, Clock, Eye, Save } from "lucide-react"
 
 export type VaultCardMode = "view" | "create" | "preview"
 
@@ -29,15 +29,13 @@ interface ButtonConfig {
 }
 
 export function VaultCard({
-  sourceToken = "USDC",
-  sourceAmount = 1000,
-  sourceSymbol = "USDC",
-  targetName = "mSOL / SOL Yield loop",
-  targetAmount = 950,
-  targetSymbol = "mSOL",
-  percentage = 65,
-  timeLeft = "3 Days",
-  id,
+  sourceAmount,
+  sourceSymbol,
+  targetName,
+  targetAmount,
+  targetSymbol,
+  percentage,
+  timeLeft,
   mode = "view",
   onAction,
 }: VaultCardProps) {
@@ -73,7 +71,7 @@ export function VaultCard({
               <p className="text-sm text-muted-foreground">Source Token</p>
               <div className="flex items-center gap-2">
                 <div className="h-8 w-8 rounded-full bg-gray-100 flex items-center justify-center font-semibold text-sm">
-                  {sourceSymbol.slice(0, 2)}
+                  {sourceSymbol?.slice(0, 2)}
                 </div>
                 <span className="font-medium">{sourceSymbol}</span>
               </div>

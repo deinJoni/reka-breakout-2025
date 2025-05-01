@@ -96,27 +96,29 @@ function TargetOption({ option }: {
   )
 }
 
-// Form schema
+// Form schema for validation
 const formSchema = z.object({
   sourceToken: z.string({
     required_error: "Please select a source token",
   }),
-  sourceAmount: z.coerce
-    .number({
-      required_error: "Please enter an amount",
-      invalid_type_error: "Please enter a valid number",
-    })
-    .positive("Amount must be positive"),
+  sourceAmount: z.union([
+    z.string().refine(val => val === '', {
+      message: "Please enter an amount"
+    }),
+    z.coerce.number()
+      .positive("Amount must be positive")
+  ]).transform(val => typeof val === 'string' ? 0 : val),
   target: z.string({
     required_error: "Please select a target",
   }),
-  durationValue: z.coerce
-    .number({
-      required_error: "Please enter a duration",
-      invalid_type_error: "Please enter a valid number",
-    })
-    .int("Duration must be a whole number")
-    .positive("Duration must be positive"),
+  durationValue: z.union([
+    z.string().refine(val => val === '', {
+      message: "Please enter a duration"
+    }),
+    z.coerce.number()
+      .int("Duration must be a whole number")
+      .positive("Duration must be positive")
+  ]).transform(val => typeof val === 'string' ? 0 : val),
   durationUnit: z.enum(["Hours", "Days", "Weeks"], {
     required_error: "Please select a duration unit",
   }),
@@ -130,23 +132,38 @@ const formSchema = z.object({
     .max(100, "Maximum 100 executions allowed"),
 })
 
+// Type for form output after validation
+type FormOutput = z.infer<typeof formSchema>;
+
+// Define a type for vault preview data
+interface VaultPreviewData {
+  sourceToken: string;
+  sourceAmount: number;
+  sourceSymbol: string;
+  targetName: string;
+  targetAmount: number;
+  targetSymbol: string;
+  percentage: number;
+  timeLeft: string;
+}
+
 export default function VaultCreateFeature() {
   const router = useRouter()
-  const [previewData, setPreviewData] = useState<any>(null)
-  const [formData, setFormData] = useState<z.infer<typeof formSchema> | null>(null)
+  const [previewData, setPreviewData] = useState<VaultPreviewData | null>(null)
+  const [formData, setFormData] = useState<FormOutput | null>(null)
   const { prices: allPrices, isLoading: pricesLoading } = useTokenPrices({ env: "mainnet-beta" })
   const { options: targetOptions, isLoading: targetOptionsLoading } = useTargetOptions(allPrices || [])
   const { options: sourceTokens } = useSourceTokens(allPrices || [])
   const createVaultMutation = useCreateVault()
 
-  // Initialize form
-  const form = useForm<z.infer<typeof formSchema>>({
+  // Initialize form with empty values for number fields
+  const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       sourceToken: "",
-      sourceAmount: "" as any,
+      sourceAmount: "",  // Empty string for initial state
       target: "",
-      durationValue: "" as any,
+      durationValue: "", // Empty string for initial state
       durationUnit: "Days",
       executions: 1,
     },
@@ -165,10 +182,10 @@ export default function VaultCreateFeature() {
   }
 
   // Calculate derived values based on user input
-  const calculateDerivedValues = (data: z.infer<typeof formSchema>, prices: TokenPrice[]) => {
+  const calculateDerivedValues = (data: FormOutput, prices: TokenPrice[]) => {
     const targetInfo = targetOptions.find((t) => t.value === data.target)
-    const sourceInfo = sourceTokens.find((t) => t.value === data.sourceToken)
-
+    // Using sourceTokens directly instead of assigning to sourceInfo
+    
     // Get USD prices and symbols for source and target tokens
     const sourcePriceInfo = prices.find(p => p.mint === data.sourceToken)
     const targetPriceInfo = prices.find(p => p.mint === data.target)
@@ -223,7 +240,16 @@ export default function VaultCreateFeature() {
           unit: formData.durationUnit
         },
         executions: formData.executions,
-        metadata: previewData
+        metadata: {
+          sourceToken: previewData.sourceToken,
+          sourceAmount: previewData.sourceAmount,
+          sourceSymbol: previewData.sourceSymbol,
+          targetName: previewData.targetName,
+          targetAmount: previewData.targetAmount,
+          targetSymbol: previewData.targetSymbol,
+          percentage: previewData.percentage,
+          timeLeft: previewData.timeLeft,
+        }
       }
     }, {
       onSuccess: () => {

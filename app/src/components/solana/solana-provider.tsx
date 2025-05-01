@@ -16,16 +16,29 @@ const config = createWalletUiConfig({
   clusters: [createSolanaDevnet(), createSolanaLocalnet(), createSolanaMainnet()],
 })
 
+// Define types for Phantom provider
+interface PhantomProvider {
+  solana?: {
+    isPhantom?: boolean;
+    connect: (options?: { onlyIfTrusted: boolean }) => Promise<{ publicKey: string }>;
+  }
+}
+
+// Augment window interface
+interface WindowWithPhantom extends Window {
+  phantom?: PhantomProvider;
+}
+
 // Helper function to connect to Phantom silently, Phantom does not support auto connect with new Wallet-UI: https://github.com/solana-developers/create-solana-dapp/issues/132
 const PhantomSilentConnect = () => {
   const { account, wallets, connected, connect } = useWalletUi();
 
   useEffect(() => {
-    // if we’re already connected (e.g. Solflare / Backpack) just exit
+    // if we're already connected (e.g. Solflare / Backpack) just exit
     if (connected || account) return;
 
-    const provider = (window as any).phantom?.solana;
-    if (!provider?.isPhantom) return;             // the user isn’t running Phantom
+    const provider = (window as WindowWithPhantom).phantom?.solana;
+    if (!provider?.isPhantom) return;             // the user isn't running Phantom
 
     // ask Phantom to reconnect only if the user had already approved the dApp once
     provider
