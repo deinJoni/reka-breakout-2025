@@ -14,7 +14,7 @@ pub struct DepositToken<'info> {
         has_one = user,
         seeds = [SEED.as_bytes(), VAULT_SEED.as_bytes(), user.key().as_ref()], 
         bump = user_vault.bump,
-        realloc = UserVault::len_with_new_token_account(user_vault.deref().clone()),
+        realloc = UserVault::realloc_len(user_vault.deref().clone(), mint.key()),
         realloc::payer = user,
         realloc::zero = true,
     )]

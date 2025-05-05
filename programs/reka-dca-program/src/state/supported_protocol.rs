@@ -10,6 +10,6 @@ pub struct SupportedProtocol {
 
 impl SupportedProtocol {
     pub fn init_len(id_length: usize, automation_data_template_length: usize) -> usize {
-        8 + 4 * (id_length * 1) + 32 + 4 * (automation_data_template_length * 1) + 1
+        8 + 4 + (id_length * 1) + 32 + 4 + (automation_data_template_length * 1) + 1
     }
 }

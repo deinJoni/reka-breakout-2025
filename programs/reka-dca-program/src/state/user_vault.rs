@@ -24,7 +24,13 @@ impl UserVault {
         8 + 32 + 8 + 4 * (self.token_accounts_balances.len() * (32 + 32 + 8)) + 1
     }
 
-    pub fn len_with_new_token_account(self) -> usize {
-        8 + 32 + 8 + 4 * ((self.token_accounts_balances.len() + 1) * (32 + 32 + 8)) + 1
+    pub fn realloc_len(self, mint: Pubkey) -> usize {
+        let token_account_balance_index = self.token_accounts_balances.iter().position(|x| x.mint == mint);
+
+        if let Some(_) = token_account_balance_index {
+            8 + 32 + 8 + 4 + (self.token_accounts_balances.len() * (32 + 32 + 8)) + 1
+        } else {
+            8 + 32 + 8 + 4 + ((self.token_accounts_balances.len() + 1) * (32 + 32 + 8)) + 1
+        }
     }
 }

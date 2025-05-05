@@ -1,41 +1,30 @@
-use anchor_lang::prelude::*;
-use anchor_spl::token::{Token, Transfer};
-use crate::state::*;
+use anchor_lang::{prelude::*, system_program::Transfer};
+use crate::{constants::{SEED, VAULT_SEED}, state::*};
 
 #[derive(Accounts)]
 pub struct WithdrawSol<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
-    #[account(mut , has_one = user)]
+
+    #[account(
+        mut, 
+        has_one = user,
+        seeds = [SEED.as_bytes(), VAULT_SEED.as_bytes(), user.key().as_ref()], 
+        bump = user_vault.bump
+    )]
     pub user_vault: Account<'info, UserVault>,
-    #[account(mut)]
-    /// CHECK: This is the vault's token account to withdraw from
-    pub vault_token_account: AccountInfo<'info>,
-    #[account(mut)]
-    /// CHECK: This is the user's token account to withdraw into
-    pub user_token_account: AccountInfo<'info>,
-    /// CHECK: The token program account
-    pub token_program: Program<'info, Token>,
+
+    pub system_program: Program<'info, System>,
 }
 
 impl WithdrawSol<'_> {
     pub fn handler(ctx: Context<WithdrawSol>, amount: u64) -> Result<()> {
-        let user_vault_key = ctx.accounts.user_vault.key();
-        let seeds = &[
-            b"reka", b"vault".as_ref(),
-            user_vault_key.as_ref(),
-            &[ctx.accounts.user_vault.bump],
-        ];
-        let signer_seeds = &[&seeds[..]];
-    
-        let cpi_accounts = Transfer {
-            from: ctx.accounts.vault_token_account.to_account_info(),
-            to: ctx.accounts.user_token_account.to_account_info(),
-            authority: ctx.accounts.user_vault.to_account_info(),
-        };
-        let cpi_program = ctx.accounts.token_program.to_account_info();
-        let cpi_ctx = CpiContext::new_with_signer(cpi_program, cpi_accounts, signer_seeds);
-        anchor_spl::token::transfer(cpi_ctx, amount)?;
+        let user_vault = &mut ctx.accounts.user_vault;
+        user_vault.sol_balance -= amount;
+
+        ctx.accounts.user_vault.sub_lamports(amount)?;
+        ctx.accounts.user.add_lamports(amount)?;
+
         Ok(())
     }
 }

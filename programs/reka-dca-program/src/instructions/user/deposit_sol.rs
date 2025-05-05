@@ -12,10 +12,7 @@ pub struct DepositSol<'info> {
         mut, 
         has_one = user,
         seeds = [SEED.as_bytes(), VAULT_SEED.as_bytes(), user.key().as_ref()], 
-        bump = user_vault.bump,
-        realloc = UserVault::len_with_new_token_account(user_vault.deref().clone()),
-        realloc::payer = user,
-        realloc::zero = true,
+        bump = user_vault.bump
     )]
     pub user_vault: Account<'info, UserVault>,
 

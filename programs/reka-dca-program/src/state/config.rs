@@ -21,10 +21,10 @@ impl Config {
     }
 
     pub fn len(self) -> usize {
-        8 + 32 + 4 * (self.supported_protocols.len() * (Self::MAX_ID_LENGTH + 32)) + 1
+        8 + 32 + 4 + (self.supported_protocols.len() * (Self::MAX_ID_LENGTH + 32)) + 1
     }
 
     pub fn len_with_new_protocol(self) -> usize {
-        8 + 32 + 4 * ((self.supported_protocols.len() + 1) * (Self::MAX_ID_LENGTH + 32)) + 1
+        8 + 32 + 4 + ((self.supported_protocols.len() + 1) * (Self::MAX_ID_LENGTH + 32)) + 1
     }
 }
