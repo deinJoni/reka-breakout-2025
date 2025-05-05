@@ -3,6 +3,7 @@
 pub mod error;
 pub mod instructions;
 pub mod state;
+pub mod constants;
 
 pub use crate::instructions::*;
 pub use state::*;
@@ -17,7 +18,7 @@ pub mod reka_dca_program {
         InitializeConfig::handler(ctx)
     }
 
-    pub fn add_supported_protocols(
+    pub fn add_supported_protocol(
         ctx: Context<AddSupportedProtocol>,
         automation_id: String,
         protocol_program_id: Pubkey,
@@ -30,22 +31,25 @@ pub mod reka_dca_program {
             automation_data_template
         )
     }
-
-    // User instruction to create a Vault
-    pub fn create_vault(ctx: Context<CreateVault>) -> Result<()> {
-        CreateVault::handler(ctx)
+    
+    pub fn initialize_user_vault(ctx: Context<InitializeUserVault>) -> Result<()> {
+        InitializeUserVault::handler(ctx)
+    }
+    
+    pub fn deposit_sol(ctx: Context<DepositSol>, amount: u64) -> Result<()> {
+        DepositSol::handler(ctx, amount)
+    }
+    
+    pub fn deposit_token(ctx: Context<DepositToken>, amount: u64) -> Result<()> {
+        DepositToken::handler(ctx, amount)
     }
 
-    // User instruction to deposit assets into their Vault
-    // This is a simplified example, handling specific token types is needed
-    pub fn deposit(ctx: Context<Deposit>, amount: u64) -> Result<()> {
-        Deposit::handler(ctx, amount)
+    pub fn withdraw_sol(ctx: Context<WithdrawSol>, amount: u64) -> Result<()> {
+        WithdrawSol::handler(ctx, amount)
     }
 
-    // User instruction to withdraw assets from their Vault
-    // This is a simplified example, handling specific token types is needed
-    pub fn withdraw(ctx: Context<Withdraw>, amount: u64) -> Result<()> {
-        Withdraw::handler(ctx, amount)
+    pub fn withdraw_token(ctx: Context<WithdrawToken>, amount: u64) -> Result<()> {
+        WithdrawToken::handler(ctx, amount)
     }
 
     // User instruction to create a DCA event

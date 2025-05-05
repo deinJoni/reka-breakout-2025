@@ -17,14 +17,14 @@ pub struct TokenAccountBalance {
 
 impl UserVault {
     pub fn init_len() -> usize {
-        8 + 32 + 4 + 1
+        8 + 32 + 8 + 4 + 1
     }
 
     pub fn len(self) -> usize {
-        8 + 32 + 4 * (self.token_accounts_balances.len() * (32 + 32 + 8)) + 1
+        8 + 32 + 8 + 4 * (self.token_accounts_balances.len() * (32 + 32 + 8)) + 1
     }
 
     pub fn len_with_new_token_account(self) -> usize {
-        8 + 32 + 4 * ((self.token_accounts_balances.len() + 1) * (32 + 32 + 8)) + 1
+        8 + 32 + 8 + 4 * ((self.token_accounts_balances.len() + 1) * (32 + 32 + 8)) + 1
     }
 }

@@ -1,5 +1,5 @@
 use anchor_lang::prelude::*;
-use crate::state::*;
+use crate::{constants::{AUTOMATION_SEED, SEED}, state::*};
 
 #[derive(Accounts)]
 #[instruction(automation_id: String)]
@@ -14,7 +14,7 @@ pub struct CreateDCAEvent<'info> {
         init,
         payer = user,
         space = 8 + 32 + 32 + 8 + 8 + 1000 + 32, 
-        seeds = [b"reka", b"automation".as_ref(), user_vault.key().as_ref(), automation_id.as_bytes()],
+        seeds = [SEED.as_bytes(), AUTOMATION_SEED.as_bytes(), user_vault.key().as_ref(), automation_id.as_bytes()],
         bump
     )]
     pub dca_event: Account<'info, DcaEvent>,

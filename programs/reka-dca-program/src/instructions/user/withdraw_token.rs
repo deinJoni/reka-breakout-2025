@@ -3,7 +3,7 @@ use anchor_spl::token::{Token, Transfer};
 use crate::state::*;
 
 #[derive(Accounts)]
-pub struct Withdraw<'info> {
+pub struct WithdrawToken<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
     #[account(mut , has_one = user)]
@@ -18,8 +18,8 @@ pub struct Withdraw<'info> {
     pub token_program: Program<'info, Token>,
 }
 
-impl Withdraw<'_> {
-    pub fn handler(ctx: Context<Withdraw>, amount: u64) -> Result<()> {
+impl WithdrawToken<'_> {
+    pub fn handler(ctx: Context<WithdrawToken>, amount: u64) -> Result<()> {
         let user_vault_key = ctx.accounts.user_vault.key();
         let seeds = &[
             b"reka", b"vault".as_ref(),
