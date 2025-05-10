@@ -54,19 +54,16 @@ pub mod reka_dca_program {
 
     // User instruction to create a DCA event
     pub fn create_dca_event(
-        ctx: Context<CreateDCAEvent>,
-        automation: Pubkey,
-        amount: u64,
+        ctx: Context<CreateAutomation>,
+        id: String,
+        protocols_data: Vec<ProtocolData>,
         frequency_seconds: i64,
-        // Potentially pass specific parameters for this automation instance
-        automation_params: Vec<u8>,
     ) -> Result<()> {
-        CreateDCAEvent::handler(
+        CreateAutomation::handler(
             ctx,
-            automation,
-            amount,
-            frequency_seconds,
-            automation_params
+            id,
+            protocols_data,
+            frequency_seconds
         )
     }
 

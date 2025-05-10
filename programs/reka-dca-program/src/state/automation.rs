@@ -1,0 +1,50 @@
+use anchor_lang::prelude::*;
+
+#[account]
+pub struct Automation {
+    pub id: String,
+    pub user: Pubkey,
+    pub user_vault: Pubkey,
+    pub protocols_data: Vec<ProtocolData>,
+    pub frequency_seconds: i64,
+    pub last_executed_timestamp: i64,
+    pub bump: u8,
+}
+
+impl Automation {
+    pub fn init_len(id_length: usize, protocols_data: Vec<ProtocolData>) -> usize {
+        8 + 4 + id_length + 32 + 32 + 4 + protocols_data.iter().map(|pd| pd.clone().len()).sum::<usize>() + 8 + 8 + 1
+    }
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+pub struct ProtocolData {
+    pub protocol: Pubkey,
+    pub automation_accounts: Vec<Pubkey>,
+    pub automation_params: Vec<AutomationParam>,
+}
+
+impl ProtocolData {
+    pub fn len(self: ProtocolData) -> usize {
+        32 + 4 + self.automation_accounts.len() * 32 + 4 + self.automation_params.iter().map(|pd| pd.clone().len()).sum::<usize>()
+    }
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+pub struct AutomationParam {
+    pub index: u8,
+    pub data: Vec<u8>,
+    pub mode: AutomationParamMode,
+}
+
+impl AutomationParam {
+    pub fn len(self: AutomationParam) -> usize {
+        1 + 4 + self.data.len() + 1
+    }
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+pub enum AutomationParamMode {
+    Replace,
+    Add,
+}

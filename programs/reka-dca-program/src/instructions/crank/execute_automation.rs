@@ -7,7 +7,7 @@ use crate::error::RekaError;
 pub struct ExecuteDCAEvent<'info> {
     #[account(mut/* , has_one = owner*/)]
     // Ensure only the vault owner or a designated executor can trigger
-    pub dca_event: Account<'info, DcaEvent>,
+    pub dca_event: Account<'info, Automation>,
     #[account(mut/* , has_one = owner*/)]
     pub user_vault: Account<'info, UserVault>,
     // You'll need to fetch the correct supported_protocol account based on dca_event.automation_id
