@@ -44,7 +44,7 @@ impl AddSupportedProtocol<'_> {
         let supported_protocol = &mut ctx.accounts.supported_protocol;
         supported_protocol.id = id;
         supported_protocol.program_id = program_id;
-        supported_protocol.automation_data_template = data_template;
+        supported_protocol.data_template = data_template;
         supported_protocol.bump = ctx.bumps.supported_protocol;
 
         Ok(())

@@ -20,13 +20,26 @@ impl Automation {
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct ProtocolData {
     pub protocol: Pubkey,
-    pub automation_accounts: Vec<Pubkey>,
+    pub automation_accounts_info: Vec<AutomationAccountInfo>,
     pub automation_params: Vec<AutomationParam>,
 }
 
 impl ProtocolData {
     pub fn len(self: ProtocolData) -> usize {
-        32 + 4 + self.automation_accounts.len() * 32 + 4 + self.automation_params.iter().map(|pd| pd.clone().len()).sum::<usize>()
+        32 + 4 + self.automation_accounts_info.iter().map(|pd| pd.clone().len()).sum::<usize>() + 4 + self.automation_params.iter().map(|pd| pd.clone().len()).sum::<usize>()
+    }
+}
+
+#[derive(AnchorSerialize, AnchorDeserialize, Clone)]
+pub struct AutomationAccountInfo {
+    pub address: Pubkey,
+    pub is_mut: bool,
+    pub is_signer: bool
+}
+
+impl AutomationAccountInfo {
+    pub fn len(self: AutomationAccountInfo) -> usize {
+        32 + 1 + 1
     }
 }
 
