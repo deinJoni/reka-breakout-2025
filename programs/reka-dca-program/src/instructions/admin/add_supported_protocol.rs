@@ -1,6 +1,6 @@
 use std::ops::Deref;
 
-use crate::{constants::{CONFIG_SEED, SEED}, state::*};
+use crate::{constants::{CONFIG_SEED, SEED, SUPPORTED_PROTOCOL_SEED}, state::*};
 use anchor_lang::prelude::*;
 
 #[derive(Accounts)]
@@ -22,7 +22,7 @@ pub struct AddSupportedProtocol<'info> {
     )]
     pub config: Account<'info, Config>,
 
-    #[account(init, payer = admin, space = SupportedProtocol::init_len(id.len(), data_template.len()), seeds = [SEED.as_bytes(), id.as_bytes()], bump)]
+    #[account(init, payer = admin, space = SupportedProtocol::init_len(id.len(), data_template.len()), seeds = [SEED.as_bytes(), SUPPORTED_PROTOCOL_SEED.as_bytes(), id.as_bytes()], bump)]
     pub supported_protocol: Account<'info, SupportedProtocol>,
 
     pub system_program: Program<'info, System>,

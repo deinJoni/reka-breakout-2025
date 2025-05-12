@@ -1,5 +1,7 @@
 use anchor_lang::prelude::*;
 
+use super::ProtocolIdKey;
+
 #[account]
 pub struct Automation {
     pub id: String,
@@ -13,20 +15,43 @@ pub struct Automation {
 
 impl Automation {
     pub fn init_len(id_length: usize, protocols_data: Vec<ProtocolData>) -> usize {
-        8 + 4 + id_length + 32 + 32 + 4 + protocols_data.iter().map(|pd| pd.clone().len()).sum::<usize>() + 8 + 8 + 1
+        8 + 4
+            + id_length
+            + 32
+            + 32
+            + 4
+            + protocols_data
+                .iter()
+                .map(|pd| pd.clone().len())
+                .sum::<usize>()
+            + 8
+            + 8
+            + 1
     }
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct ProtocolData {
-    pub protocol: Pubkey,
+    pub protocol: ProtocolIdKey,
     pub automation_accounts_info: Vec<AutomationAccountInfo>,
     pub automation_params: Vec<AutomationParam>,
 }
 
 impl ProtocolData {
     pub fn len(self: ProtocolData) -> usize {
-        32 + 4 + self.automation_accounts_info.iter().map(|pd| pd.clone().len()).sum::<usize>() + 4 + self.automation_params.iter().map(|pd| pd.clone().len()).sum::<usize>()
+        (4 + self.protocol.id.len() + 32)
+            + 4
+            + self
+                .automation_accounts_info
+                .iter()
+                .map(|pd| pd.clone().len())
+                .sum::<usize>()
+            + 4
+            + self
+                .automation_params
+                .iter()
+                .map(|pd| pd.clone().len())
+                .sum::<usize>()
     }
 }
 
@@ -34,7 +59,7 @@ impl ProtocolData {
 pub struct AutomationAccountInfo {
     pub address: Pubkey,
     pub is_mut: bool,
-    pub is_signer: bool
+    pub is_signer: bool,
 }
 
 impl AutomationAccountInfo {

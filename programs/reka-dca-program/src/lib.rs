@@ -51,9 +51,8 @@ pub mod reka_dca_program {
     pub fn withdraw_token(ctx: Context<WithdrawToken>, amount: u64) -> Result<()> {
         WithdrawToken::handler(ctx, amount)
     }
-
-    // User instruction to create a DCA event
-    pub fn create_dca_event(
+    
+    pub fn create_automation(
         ctx: Context<CreateAutomation>,
         id: String,
         protocols_data: Vec<ProtocolData>,
@@ -66,9 +65,8 @@ pub mod reka_dca_program {
             frequency_seconds
         )
     }
-
-    // Instruction to execute a DCA event (likely called by an off-chain service)
-    pub fn execute_dca_event(ctx: Context<ExecuteDCAEvent>) -> Result<()> {
-        ExecuteDCAEvent::handler(ctx)
+    
+    pub fn execute_automation(ctx: Context<ExecuteAutomation>) -> Result<()> {
+        ExecuteAutomation::handler(ctx)
     }
 }

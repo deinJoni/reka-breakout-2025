@@ -17,7 +17,7 @@ pub struct CreateAutomation<'info> {
         seeds = [SEED.as_bytes(), AUTOMATION_SEED.as_bytes(), user_vault.key().as_ref(), id.as_bytes()],
         bump
     )]
-    pub dca_event: Account<'info, Automation>,
+    pub automation: Account<'info, Automation>,
 
     pub system_program: Program<'info, System>,
 }
@@ -29,13 +29,14 @@ impl CreateAutomation<'_> {
         protocols_data: Vec<ProtocolData>,
         frequency_seconds: i64,
     ) -> Result<()> {
-        let dca_event = &mut ctx.accounts.dca_event;
-        dca_event.id = id;
-        dca_event.user_vault = ctx.accounts.user_vault.key();
-        dca_event.protocols_data = protocols_data;
-        dca_event.frequency_seconds = frequency_seconds;
-        dca_event.last_executed_timestamp = 0;
-        dca_event.user = ctx.accounts.user.key();
+        let automation = &mut ctx.accounts.automation;
+        automation.id = id;
+        automation.user_vault = ctx.accounts.user_vault.key();
+        automation.protocols_data = protocols_data;
+        automation.frequency_seconds = frequency_seconds;
+        automation.last_executed_timestamp = 0;
+        automation.user = ctx.accounts.user.key();
+        automation.bump = ctx.bumps.automation;
         Ok(())
     }
 }

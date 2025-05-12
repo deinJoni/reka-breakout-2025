@@ -1,74 +1,160 @@
-use anchor_lang::prelude::*;
-use anchor_spl::token::Token;
-use crate::state::*;
-use crate::error::RekaError;
+// src/instructions/execute_automation.rs
+use crate::{
+    constants::{AUTOMATION_SEED, SEED, SUPPORTED_PROTOCOL_SEED, VAULT_SEED},
+    error::RekaError,
+    state::*,
+};
+use anchor_lang::{
+    prelude::*,
+    solana_program::{instruction::Instruction, program::invoke_signed},
+};
 
 #[derive(Accounts)]
-pub struct ExecuteDCAEvent<'info> {
-    #[account(mut/* , has_one = owner*/)]
-    // Ensure only the vault owner or a designated executor can trigger
-    pub dca_event: Account<'info, Automation>,
-    #[account(mut/* , has_one = owner*/)]
-    pub user_vault: Account<'info, UserVault>,
-    // You'll need to fetch the correct supported_protocol account based on dca_event.automation_id
-    // This might require another account in the context or fetching within the instruction logic.
-    // For simplicity, we'll assume a single SupportedProtocol account for now.
-    pub supported_protocol: Account<'info, SupportedProtocol>,
-    /// CHECK: The program to perform the CPI to (fetched from supported_protocol)
-    pub target_program: UncheckedAccount<'info>,
-    // Add any other accounts required by the target protocol's CPI instruction
-    // These would be dynamically determined based on the automation_id and automation_params
-    // For example, token accounts, pool accounts, etc.
-    // #[account(mut)]
-    // /// CHECK: Example: Token account for a swap
-    // pub source_token_account: AccountInfo<'info>,
-    // #[account(mut)]
-    // /// CHECK: Example: Token account for a swap
-    // pub destination_token_account: AccountInfo<'info>,
+pub struct ExecuteAutomation<'info> {
+    #[account(mut)]
+    pub executor: Signer<'info>,
 
-    // The signer for the CPI from the vault (the user_vault PDA)
-    /// CHECK: The user_vault PDA is the signer for the CPI
-    pub user_vault_authority: AccountInfo<'info>, // This will be the PDA
-    /// CHECK: The token program account (if transferring tokens)
-    pub token_program: Program<'info, Token>, // Add if CPI involves token transfers
-    pub system_program: Program<'info, System>, // Add if CPI involves system program interactions (like creating accounts)
+    #[account(
+        mut,
+        seeds = [SEED.as_bytes(), VAULT_SEED.as_bytes(), automation.user.as_ref()],
+        bump = user_vault.bump,
+        constraint = user_vault.key() == automation.user_vault @ RekaError::InvalidUserVault,
+        constraint = user_vault.user == automation.user @ RekaError::VaultUserMismatch,
+    )]
+    pub user_vault: Account<'info, UserVault>,
+
+    #[account(
+        mut,
+        seeds = [SEED.as_bytes(), AUTOMATION_SEED.as_bytes(), automation.user_vault.as_ref(), automation.id.as_bytes()],
+        bump = automation.bump,
+        has_one = user_vault, // Ensures association
+    )]
+    pub automation: Account<'info, Automation>,
+
+    /// CHECK: Account validation is done below against automation.protocols_data[0].protocol
+    #[account(
+        seeds = [SEED.as_bytes(), SUPPORTED_PROTOCOL_SEED.as_bytes(), automation.protocols_data[0].protocol.id.as_bytes()],
+        bump = supported_protocol.bump,
+        constraint = supported_protocol.key() == automation.protocols_data[0].protocol.key @ RekaError::InvalidSupportedProtocol
+    )]
+    pub supported_protocol: Account<'info, SupportedProtocol>,
+
+    /// CHECK: This is the program we are calling via CPI. Validated against supported_protocol.program_id. Marked executable.
+    #[account(
+        executable,
+        constraint = target_program.key() == supported_protocol.program_id @ RekaError::InvalidTargetProgram
+    )]
+    pub target_program: AccountInfo<'info>,
+
+    pub system_program: Program<'info, System>,
+    pub clock: Sysvar<'info, Clock>,
 }
 
-impl ExecuteDCAEvent<'_> {
-
-    pub fn handler(ctx: Context<ExecuteDCAEvent>) -> Result<()> {
-        let dca_event = &mut ctx.accounts.dca_event;
-        let supported_protocol = &ctx.accounts.supported_protocol;
+impl ExecuteAutomation<'_> {
+    pub fn handler(ctx: Context<ExecuteAutomation>) -> Result<()> {
+        let automation = &mut ctx.accounts.automation;
         let user_vault = &ctx.accounts.user_vault;
-    
-        // Check if the DCA event is due for execution
-        let current_timestamp = Clock::get()?.unix_timestamp;
-        if current_timestamp < dca_event.last_executed_timestamp + dca_event.frequency_seconds {
-            return Err(RekaError::DcaNotDue.into());
+        let supported_protocol = &ctx.accounts.supported_protocol;
+        let target_program = &ctx.accounts.target_program;
+        let clock = &ctx.accounts.clock;
+        let current_timestamp = clock.unix_timestamp;
+        
+        require!(
+            current_timestamp >= automation.last_executed_timestamp + automation.frequency_seconds,
+            RekaError::ExecutionTooSoon
+        );
+        
+        require!(
+            !automation.protocols_data.is_empty(),
+            RekaError::NoProtocolsDefined
+        );
+        let protocol_data = automation.protocols_data[0].clone();
+        
+        let mut instruction_data = supported_protocol.data_template.clone();
+        
+        for param in &protocol_data.automation_params {
+            let index = param.index as usize;
+            match param.mode {
+                AutomationParamMode::Replace => {
+                    let start = param.index as usize;
+                    let end = start + param.data.len();
+                    require!(
+                        end <= instruction_data.len(),
+                        RekaError::DataIndexOutOfBounds
+                    );
+                    instruction_data[start..end].copy_from_slice(&param.data);
+                }
+                AutomationParamMode::Add => {
+                    instruction_data.extend_from_slice(&param.data);
+                    require!(
+                        index <= instruction_data.len(),
+                        RekaError::DataIndexOutOfBounds
+                    );
+
+                    if index == instruction_data.len() {
+                        instruction_data.extend_from_slice(&param.data);
+                    } else {
+                        let tail = instruction_data.split_off(index);
+                        instruction_data.extend_from_slice(&param.data);
+                        instruction_data.extend_from_slice(&tail);
+                    }
+                }
+            }
         }
-    
-        // TODO: Implement the CPI to the supported protocol based on `supported_protocol.protocol_program_id`
-        // and `dca_event.automation_params`. This is the most complex part and
-        // will require dynamic CPI calls based on the automation_id and parameters.
-    
-        // Example CPI structure (this will vary greatly depending on the protocol):
-        // let cpi_accounts = ... // Accounts required by the target protocol
-        // let cpi_program = supported_protocol.protocol_program_id;
-        // let cpi_ctx = CpiContext::new(cpi_program, cpi_accounts);
-        // // You'll need to construct the instruction data for the CPI based on automation_params
-        // let instruction_data = ...;
-        // invoke(
-        //     &solana_program::instruction::Instruction {
-        //         program_id: cpi_program,
-        //         accounts: cpi_ctx.to_account_metas(None),
-        //         data: instruction_data,
-        //     },
-        //     &cpi_ctx.to_account_infos(),
-        // )?;
-    
-        // After successful CPI execution:
-        dca_event.last_executed_timestamp = current_timestamp;
-    
+
+        let required_accounts_count = protocol_data.automation_accounts_info.len();
+        require!(
+            ctx.remaining_accounts.len() == required_accounts_count,
+            RekaError::IncorrectRemainingAccountsCount
+        );
+
+        let mut account_metas = Vec::with_capacity(required_accounts_count);
+        let mut account_infos_for_cpi = Vec::with_capacity(required_accounts_count);
+        
+        for (i, acc_info_def) in protocol_data.automation_accounts_info.iter().enumerate() {
+            let provided_acc_info = &ctx.remaining_accounts[i];
+            
+            require!(
+                provided_acc_info.key() == acc_info_def.address,
+                RekaError::AccountMismatch
+            );
+            
+            let is_signer_for_cpi =
+                acc_info_def.is_signer && (acc_info_def.address == user_vault.key());
+                
+            if acc_info_def.is_mut {
+                account_metas.push(AccountMeta::new(*provided_acc_info.key, is_signer_for_cpi));
+            } else {
+                account_metas.push(AccountMeta::new_readonly(
+                    *provided_acc_info.key,
+                    is_signer_for_cpi,
+                ));
+            }
+            
+            account_infos_for_cpi.push(provided_acc_info.clone());
+        }
+        
+        let instruction = Instruction {
+            program_id: *target_program.key,
+            accounts: account_metas,
+            data: instruction_data,
+        };
+        
+        let user_vault_signer_seeds: &[&[&[u8]]] = &[&[
+            SEED.as_bytes(),
+            VAULT_SEED.as_bytes(),
+            automation.user.as_ref(),
+            &[user_vault.bump],
+        ]];
+
+        invoke_signed(
+            &instruction,
+            &account_infos_for_cpi,
+            user_vault_signer_seeds,
+        )?;
+
+        automation.last_executed_timestamp = current_timestamp;
+
         Ok(())
     }
 }
