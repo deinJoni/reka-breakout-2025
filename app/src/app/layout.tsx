@@ -5,15 +5,14 @@ import { AppLayout } from '@/components/app-layout'
 import React from 'react'
 
 export const metadata: Metadata = {
-  title: 'Autoflow',
-  description: 'Built in Bucharest',
+  title: 'reka.finance',
+  description: 'app.reka.finance',
 }
 
 const links: { label: string; path: string }[] = [
   // More links...
   { label: 'Home', path: '/' },
-  { label: 'Account', path: '/account' },
-  { label: 'Vault', path: '/vault' },
+  { label: 'Vault (Automations)', path: '/vault' },
 ]
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {

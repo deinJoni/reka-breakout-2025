@@ -130,6 +130,7 @@ const formSchema = z.object({
     .int("Number of executions must be a whole number")
     .min(1, "Must have at least 1 execution")
     .max(100, "Maximum 100 executions allowed"),
+  submissionDatetime: z.date(),
 })
 
 // Type for form output after validation
@@ -166,6 +167,7 @@ export default function VaultCreateFeature() {
       durationValue: "", // Empty string for initial state
       durationUnit: "Days",
       executions: 1,
+      submissionDatetime: new Date(),
     },
   })
 
@@ -215,11 +217,17 @@ export default function VaultCreateFeature() {
 
   // Handle form submission for preview
   const onDraftVault = (data: z.infer<typeof formSchema>) => {
+    // Capture current time for submission
+    const dataWithCurrentSubmissionTime = {
+      ...data,
+      submissionDatetime: new Date(),
+    };
+
     // Calculate derived values
-    const vaultData = calculateDerivedValues(data, allPrices || [])
+    const vaultData = calculateDerivedValues(dataWithCurrentSubmissionTime, allPrices || [])
 
     // Store form data for later use
-    setFormData(data)
+    setFormData(dataWithCurrentSubmissionTime)
     
     // Update preview
     setPreviewData(vaultData)
@@ -240,6 +248,7 @@ export default function VaultCreateFeature() {
           unit: formData.durationUnit
         },
         executions: formData.executions,
+        submissionDatetime: formData.submissionDatetime.toISOString(),
         metadata: {
           sourceToken: previewData.sourceToken,
           sourceAmount: previewData.sourceAmount,
@@ -265,7 +274,7 @@ export default function VaultCreateFeature() {
 
   return (
     <div className="container max-w-5xl py-10">
-      <h1 className="text-3xl font-bold mb-6">Create New Vault</h1>
+      <h1 className="text-3xl font-bold color-primary mb-6">Create New Vault</h1>
 
       {/* Show error message if mutation failed */}
       {createVaultMutation.isError && (
@@ -445,7 +454,7 @@ export default function VaultCreateFeature() {
 
                 <Button 
                   type="submit" 
-                  className="w-full hover:cursor-pointer"
+                  className="w-full hover:bg-accent/90 hover:cursor-pointer bg-accent text-accent-foreground"
                 >
                   Draft Vault
                 </Button>
