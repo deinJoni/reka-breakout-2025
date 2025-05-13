@@ -53,7 +53,7 @@ const PhantomSilentConnect = () => {
       .catch(() => {
         /* user never approved before, do nothing */
       });
-  }, []);
+  }, [account, connect, connected, wallets]);
 
   return null; // invisible helper component
 }

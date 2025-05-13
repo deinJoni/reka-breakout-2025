@@ -125,7 +125,7 @@ export function VaultCard({
 
       <CardFooter className="p-6 pt-0">
         <Button 
-          className="w-full hover:cursor-pointer" 
+          className="w-full hover:bg-accent/90 hover:cursor-pointer bg-accent text-accent-foreground" 
           onClick={action}
           disabled={disabled}
         >
