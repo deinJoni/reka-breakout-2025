@@ -5,15 +5,18 @@ package_manager = "yarn"
 resolution = true
 skip-lint = false
 
-[programs.localnet]
+[programs.devnet]
 reka_dca_program = "6oEgHD36vj2r1RZXAbDT8dsqEFtmNSe574aDPbxLQde9"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "localnet"
+cluster = "https://devnet.helius-rpc.com/?api-key=2e1d2fbe-5303-4032-8dc7-732eb485111b"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/**/*.ts && anchor idl init --filepath /root/dev/reka/reka-dca-program/target/idl/reka_dca_program.json 6oEgHD36vj2r1RZXAbDT8dsqEFtmNSe574aDPbxLQde9"
+meteora = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/meteora.ts && anchor idl init --filepath /root/dev/reka/reka-dca-program/target/idl/reka_dca_program.json 6oEgHD36vj2r1RZXAbDT8dsqEFtmNSe574aDPbxLQde9"
+withdraw = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 tests/withdraw.ts && anchor idl init --filepath /root/dev/reka/reka-dca-program/target/idl/reka_dca_program.json 6oEgHD36vj2r1RZXAbDT8dsqEFtmNSe574aDPbxLQde9"
+
